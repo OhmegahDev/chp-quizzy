@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Knowledge Quiz</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Quiz Container */
+        .quiz-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin: 0 auto;
+            max-width: 800px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .quiz-header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .perfect-score-counter {
+            font-size: 1.2rem;
+            color: #f1c40f;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Question Info */
+        .question-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        /* Timer */
+        .timer {
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .timer.warning {
+            color: #e74c3c;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { opacity: 1; }
+            to { opacity: 0.5; }
+        }
+
+        /* Question */
+        .question {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        /* Options */
+        .options {
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option:hover {
+            background-color: #e9ecef;
+        }
+
+        .option.selected {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .option.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            animation: correctAnswer 0.5s ease;
+        }
+
+        .option.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            animation: shake 0.5s ease;
+        }
+
+        .option-emoji {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .option.correct .option-emoji,
+        .option.incorrect .option-emoji {
+            opacity: 1;
+        }
+
+        @keyframes correctAnswer {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        /* Next Button */
+        .next-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .next-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .next-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Results Page */
+        .results-container {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #2c3e50;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #f1c40f;
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        .result-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .result-item.correct {
+            border-left: 5px solid #2ecc71;
+        }
+
+        .result-item.incorrect {
+            border-left: 5px solid #e74c3c;
+        }
+
+        .result-question {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .result-answer {
+            font-style: italic;
+            color: #555;
+            margin: 5px 0;
+        }
+
+        .user-answer {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .user-answer.correct {
+            color: #2ecc71;
+        }
+
+        .user-answer.incorrect {
+            color: #e74c3c;
+        }
+
+        .answer-marker {
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .correct-answer {
+            display: flex;
+            align-items: center;
+            color: #2ecc71;
+            margin: 5px 0;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f4f8;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* Celebration Elements */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            opacity: 0;
+            z-index: 1000;
+            animation: confettiFall 5s ease-in-out;
+        }
+
+        .emoji-shower {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0;
+            z-index: 1000;
+            animation: emojiFloat 4s ease-in forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes emojiFloat {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 5px;
+            animation: fireworkExplode 1s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fireworkExplode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: scale(30);
+                opacity: 0;
+            }
+        }
+
+        /* PDF Viewer Styles */
+        .pdf-viewer-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pdf-viewer {
+            width: 90%;
+            height: 90%;
+            background-color: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .pdf-viewer-header {
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pdf-viewer-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .pdf-viewer-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .pdf-viewer-content {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: calc(100% - 50px);
+        }
+
+        /* Resources Page Styles */
+        .resources-container {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .resources-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .resources-header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .resource-item {
+            margin-bottom: 15px;
+        }
+
+        .resource-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-align: left;
+        }
+
+        .resource-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .back-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .back-btn:hover {
+            background-color: #7f8c8d;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .quiz-container {
+                padding: 15px;
+            }
+            
+            .question {
+                font-size: 1.1rem;
+            }
+            
+            .option {
+                padding: 12px;
+            }
+            
+            .next-btn {
+                padding: 12px;
+                font-size: 1rem;
+            }
+
+            .pdf-viewer {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <!-- Quiz Intro Screen -->
+        <div class="quiz-intro" id="quizIntro">
+            <div class="quiz-header">
+                <h1>Health Knowledge Quiz</h1>
+                <div class="perfect-score-counter" id="perfectScoreCounter">
+                    Perfect Scores: 0
+                </div>
+                <p>Test your health knowledge with 10 random questions</p>
+            </div>
+            <div class="intro-content">
+                <p>You'll have 1 minute to answer each question. Try to get as many correct as possible!</p>
+                <ul style="margin: 20px 0; padding-left: 20px;">
+                    <li>10 random health questions</li>
+                    <li>1 minute per question</li>
+                    <li>Instant feedback</li>
+                    <li>Detailed explanations</li>
+                </ul>
+            </div>
+            <button class="next-btn" id="startBtn">Start Quiz</button>
+            <button class="next-btn" id="resourcesBtn" style="margin-top: 10px; background-color: #2ecc71;">Learning Resources</button>
+        </div>
+        
+        <!-- Quiz Screen -->
+        <div class="quiz-screen" id="quizScreen" style="display: none;">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="question-info">
+                <span id="questionCount">Question 1 of 10</span>
+                <div class="timer" id="timer">⏱️ 1:00</div>
+            </div>
+            
+            <div class="question" id="question"></div>
+            
+            <div class="options" id="options"></div>
+            
+            <button class="next-btn" id="nextBtn" disabled>Next Question</button>
+        </div>
+        
+        <!-- Results Screen -->
+        <div class="results-container" id="resultsContainer">
+            <div class="results-header">
+                <h1>Quiz Results</h1>
+                <div class="score" id="scoreDisplay">Score: 0/10</div>
+                <div class="badge" id="badge" style="display: none;">Perfect Score!</div>
+            </div>
+            
+            <div id="resultsList"></div>
+            
+            <button class="next-btn" id="restartBtn">Take Quiz Again</button>
+        </div>
+
+        <!-- Resources Screen -->
+        <div class="resources-container" id="resourcesContainer">
+            <div class="resources-header">
+                <h1>Learning Resources</h1>
+                <p>View and download these health education resources</p>
+            </div>
+            
+            <div class="resource-list">
+                <div class="resource-item">
+                    <button class="resource-btn" data-pdf-url="https://ohmegahdev.github.io/chp-quizzy/CHC%20Curriculum_Signed.pdf" data-pdf-title="CHC Curriculum">
+                        CHC Curriculum
+                    </button>
+                </div>
+                
+                <div class="resource-item">
+                    <button class="resource-btn" data-pdf-url="https://ohmegahdev.github.io/chp-quizzy/Kenya-Community-Health-Policy-c.pdf" data-pdf-title="Community Health Policy">
+                        Community Health Policy
+                    </button>
+                </div>
+                
+                <div class="resource-item">
+                    <button class="resource-btn" data-pdf-url="https://ohmegahdev.github.io/chp-quizzy/Signed%20Certification%20Guidelines%20(1).pdf" data-pdf-title="CHV Training Guidelines">
+                        CHV Training Guidelines
+                    </button>
+                </div>
+            </div>
+            
+            <button class="back-btn" id="backBtn">Back to Home</button>
+        </div>
+    </div>
+
+    <!-- PDF Viewer -->
+    <div class="pdf-viewer-container" id="pdfViewerContainer">
+        <div class="pdf-viewer">
+            <div class="pdf-viewer-header">
+                <div class="pdf-viewer-title" id="pdfViewerTitle">Document</div>
+                <button class="pdf-viewer-close" id="pdfViewerClose">&times;</button>
+            </div>
+            <iframe class="pdf-viewer-content" id="pdfViewerFrame"></iframe>
+        </div>
+    </div>
+
+    <!-- Celebration Container -->
+    <div class="celebration" id="celebration"></div>
+
+    <script>
+        // Questions data
+        const questions = [
+            // Danger Signs
+            {
+                question: "What is a danger sign in a newborn infant less than 2 months old that requires immediate referral?",
+                options: ["Drinking water", "Smiling frequently", "Bulging fontanelle", "Sleeping quietly"],
+                answer: "Bulging fontanelle",
+                explanation: "A bulging fontanelle in a newborn can indicate increased pressure in the brain, such as from infection or fluid buildup, requiring urgent medical attention."
+            },
+            {
+                question: "Which of the following is NOT a danger sign in a newborn infant?",
+                options: ["Unable to breastfeed", "Convulsions", "Fast breathing", "Normal temperature of 36.5°C"],
+                answer: "Normal temperature of 36.5°C",
+                explanation: "A temperature of 36.5°C is within the normal range for a newborn, while the other options are serious danger signs indicating possible illness."
+            },
+            {
+                question: "What should a CHV do if a newborn shows a very low temperature of 35.4°C or less?",
+                options: ["Wrap the baby in a blanket", "Refer immediately", "Give extra fluids", "Monitor for 24 hours"],
+                answer: "Refer immediately",
+                explanation: "A temperature of 35.4°C or lower indicates hypothermia, a life-threatening condition in newborns that requires immediate medical intervention."
+            },
+            {
+                question: "Which symptom indicates chest in-drawing in a sick newborn?",
+                options: ["Loud crying", "Normal breathing rate", "Chest moving outward", "Chest sinking inward when breathing"],
+                answer: "Chest sinking inward when breathing",
+                explanation: "Chest in-drawing is when the chest sinks inward during breathing, a sign of severe respiratory distress in newborns that needs urgent care."
+            },
+            {
+                question: "A newborn with a birth weight less than 1.5 kg should be:",
+                options: ["Given a bath", "Fed more frequently", "Refered immediately", "Kept at home"],
+                answer: "Refered immediately",
+                explanation: "A birth weight below 1.5 kg indicates a very low birth weight newborn who needs specialized medical care to survive and thrive."
+            },
+            {
+                question: "What is a danger sign during labour requiring immediate referral?",
+                options: ["Labour lasting more than 24 hours", "Regular contractions", "Feeling tired", "Normal breathing"],
+                answer: "Labour lasting more than 24 hours",
+                explanation: "Prolonged labour (over 24 hours) can lead to complications like infection or fetal distress, requiring urgent medical attention."
+            },
+            {
+                question: "Which of these is a danger sign after delivery?",
+                options: ["Normal appetite", "Foul-smelling vaginal discharge", "Light bleeding", "Feeling energetic"],
+                answer: "Foul-smelling vaginal discharge",
+                explanation: "Foul-smelling discharge after delivery may indicate a postpartum infection, a serious condition needing immediate treatment."
+            },
+            {
+                question: "What should a CHV do if a mother reports severe headache after delivery?",
+                options: ["Give painkillers", "Advise rest", "Monitor for 48 hours", "Refer immediately"],
+                answer: "Refer immediately",
+                explanation: "A severe headache post-delivery could signal pre-eclampsia or other complications, requiring urgent medical evaluation."
+            },
+            {
+                question: "What does yellow skin or eyes in a newborn indicate?",
+                options: ["Normal development", "Good feeding", "Jaundice requiring referral", "Healthy growth"],
+                answer: "Jaundice requiring referral",
+                explanation: "Yellow skin or eyes in a newborn indicate jaundice, which can be severe and requires medical assessment to prevent complications like brain damage."
+            },
+            {
+                question: "What is a danger sign in a child under 5 years old?",
+                options: ["Good appetite", "Playing actively", "Drinking poorly", "Normal breathing"],
+                answer: "Drinking poorly",
+                explanation: "Drinking poorly in a child under 5 is a danger sign that may indicate dehydration or severe illness, needing prompt attention."
+            },
+
+            // Pneumonia
+            {
+                question: "What is a key symptom of pneumonia in children under 5?",
+                options: ["Weight gain", "Fast breathing", "Good appetite", "Clear breathing"],
+                answer: "Fast breathing",
+                explanation: "Fast breathing is a primary symptom of pneumonia in young children, indicating difficulty in getting enough oxygen."
+            },
+            {
+                question: "What is the fast breathing threshold for a child aged 2 months to 12 months?",
+                options: ["40 breaths per minute or more", "60 breaths per minute or more", "50 breaths per minute or more", "30 breaths per minute or more"],
+                answer: "50 breaths per minute or more",
+                explanation: "For children aged 2 to 12 months, a breathing rate of 50 breaths per minute or higher is considered fast and suggests pneumonia."
+            },
+            {
+                question: "What is the fast breathing threshold for a child aged 12 months to 5 years?",
+                options: ["60 breaths per minute or more", "30 breaths per minute or more", "50 breaths per minute or more", "40 breaths per minute or more"],
+                answer: "40 breaths per minute or more",
+                explanation: "For children aged 12 months to 5 years, 40 breaths per minute or more is the threshold for fast breathing, indicating possible pneumonia."
+            },
+            {
+                question: "How can pneumonia be prevented in children?",
+                options: ["Exposing them to cold air", "Avoiding breastfeeding", "Keeping children well-nourished", "Limiting handwashing"],
+                answer: "Keeping children well-nourished",
+                explanation: "Good nutrition strengthens a child's immune system, reducing the risk of infections like pneumonia."
+            },
+            {
+                question: "What should a caregiver do to reduce pneumonia risk?",
+                options: ["Feed the child less frequently", "Cover nose and mouth when sneezing", "Avoid immunizations", "Keep the child indoors always"],
+                answer: "Cover nose and mouth when sneezing",
+                explanation: "Covering the nose and mouth when sneezing prevents the spread of respiratory germs that can cause pneumonia."
+            },
+            {
+                question: "Which of these is a sign of pneumonia in children under 5?",
+                options: ["Normal breathing rate", "Improved appetite", "Chest in-drawing", "Clear skin"],
+                answer: "Chest in-drawing",
+                explanation: "Chest in-drawing, where the chest sinks inward during breathing, is a severe sign of pneumonia in young children."
+            },
+            {
+                question: "What should a CHV do if a child has fast breathing and cough for less than 2 weeks?",
+                options: ["Give ORS", "Monitor for 48 hours", "Refer immediately", "Treat with dispersible Amoxil"],
+                answer: "Treat with dispersible Amoxil",
+                explanation: "Fast breathing and cough for less than 2 weeks suggest pneumonia, treatable with dispersible Amoxil as per CHV protocol."
+            },
+            {
+                question: "What is a risk factor for pneumonia?",
+                options: ["Clean air", "Good nutrition", "Exposure to smoke", "Regular handwashing"],
+                answer: "Exposure to smoke",
+                explanation: "Smoke irritates the lungs and weakens the respiratory system, increasing the risk of pneumonia in children."
+            },
+            {
+                question: "What vaccine helps prevent pneumonia?",
+                options: ["Polio vaccine", "Tetanus vaccine", "Measles vaccine", "Pneumococcal vaccine"],
+                answer: "Pneumococcal vaccine",
+                explanation: "The pneumococcal vaccine protects against Streptococcus pneumoniae, a common cause of pneumonia in children."
+            },
+            {
+                question: "What should a CHV counsel a caregiver about for pneumonia prevention?",
+                options: ["Use cold water baths", "Avoid breastfeeding", "Keep the child away from smoke", "Limit vaccinations"],
+                answer: "Keep the child away from smoke",
+                explanation: "Avoiding smoke exposure reduces irritation and infection risk in the lungs, helping prevent pneumonia."
+            },
+
+            // Malnutrition
+            {
+                question: "What is a visible sign of malnutrition in children?",
+                options: ["Active behavior", "Normal weight", "Severe swelling at the lower legs and feet (oedema)", "Shiny hair"],
+                answer: "Severe swelling at the lower legs and feet (oedema)",
+                explanation: "Oedema, or swelling in the legs and feet, is a visible sign of severe malnutrition, often linked to kwashiorkor."
+            },
+            {
+                question: "What should a CHV do if a child shows signs of severe acute malnutrition (SAM)?",
+                options: ["Monitor for a week", "Refer the child immediately to a health facility", "Provide extra food at home", "Counsel the caregiver on feeding"],
+                answer: "Refer the child immediately to a health facility",
+                explanation: "Severe acute malnutrition requires specialized treatment at a health facility to prevent death or long-term damage."
+            },
+            {
+                question: "How is oedema checked using the MUAC strap?",
+                options: ["Weighing the child", "Checking hair color", "Measuring arm circumference", "Pressing the thumb on the foot and looking for a dent"],
+                answer: "Pressing the thumb on the foot and looking for a dent",
+                explanation: "Pressing the foot and seeing a dent that remains indicates oedema, a sign of severe malnutrition, not directly measured by MUAC."
+            },
+            {
+                question: "What does a big round stomach indicate in a malnourished child?",
+                options: ["Overfeeding", "Malnutrition", "Healthy growth", "Normal digestion"],
+                answer: "Malnutrition",
+                explanation: "A big round stomach in a malnourished child often results from protein deficiency or parasites, not healthy growth."
+            },
+            {
+                question: "For a child with moderate acute malnutrition (MAM), the CHV should:",
+                options: ["Wait for severe symptoms", "Ignore the condition", "Provide immediate treatment at home", "Refer for further assessment and counsel on feeding"],
+                answer: "Refer for further assessment and counsel on feeding",
+                explanation: "Moderate acute malnutrition needs assessment and feeding support to prevent progression to severe malnutrition."
+            },
+            {
+                question: "What MUAC measurement indicates severe acute malnutrition?",
+                options: ["12.5 cm or more", "11.5 cm to 12.4 cm", "Less than 11.5 cm", "13.0 cm or more"],
+                answer: "Less than 11.5 cm",
+                explanation: "A MUAC below 11.5 cm indicates severe acute malnutrition, signaling an urgent need for medical intervention."
+            },
+            {
+                question: "What is a sign of malnutrition in a child's skin?",
+                options: ["Smooth and shiny", "Dry and peeling", "Soft texture", "Normal color"],
+                answer: "Dry and peeling",
+                explanation: "Dry, peeling skin is a common sign of malnutrition due to deficiencies in essential nutrients like vitamins and fats."
+            },
+            {
+                question: "What should a CHV do if a child has a MUAC of 12.0 cm?",
+                options: ["Treat at home", "Counsel on feeding and refer for assessment", "Refer immediately", "Ignore the result"],
+                answer: "Counsel on feeding and refer for assessment",
+                explanation: "A MUAC of 12.0 cm indicates moderate acute malnutrition, requiring counseling and referral for proper management."
+            },
+            {
+                question: "What is a key cause of malnutrition?",
+                options: ["Drinking clean water", "Regular exercise", "Lack of proper feeding", "Overfeeding"],
+                answer: "Lack of proper feeding",
+                explanation: "Inadequate or improper feeding is a primary cause of malnutrition, leading to insufficient nutrient intake."
+            },
+            {
+                question: "What should a caregiver do to prevent malnutrition?",
+                options: ["Give only sugary snacks", "Avoid breastfeeding", "Feed the child a variety of foods", "Limit food intake"],
+                answer: "Feed the child a variety of foods",
+                explanation: "A varied diet provides essential nutrients, helping prevent malnutrition and support healthy growth."
+            },
+
+            // Diarrhoea
+            {
+                question: "How does diarrhoea primarily spread?",
+                options: ["Fresh air", "Germs in faeces", "Healthy food", "Through clean water"],
+                answer: "Germs in faeces",
+                explanation: "Diarrhoea spreads mainly through germs in faeces contaminating water, food, or hands, leading to infection."
+            },
+            {
+                question: "What is a sign of severe dehydration requiring immediate referral?",
+                options: ["Moist lips", "Active behavior", "Sunken, tearless eyes", "Normal urine output"],
+                answer: "Sunken, tearless eyes",
+                explanation: "Sunken, tearless eyes indicate severe dehydration, a life-threatening condition needing urgent medical care."
+            },
+            {
+                question: "What should be done to prevent diarrhoea?",
+                options: ["Use dirty containers", "Wash hands with soap and water", "Avoid clean water", "Skip handwashing"],
+                answer: "Wash hands with soap and water",
+                explanation: "Handwashing with soap removes germs from hands, preventing the spread of diarrhoea-causing pathogens."
+            },
+            {
+                question: "When should hands be washed to prevent diarrhoea?",
+                options: ["Only once a day", "After eating", "Before breastfeeding", "After playing outside"],
+                answer: "Before breastfeeding",
+                explanation: "Washing hands before breastfeeding prevents germs from transferring to the child, reducing diarrhoea risk."
+            },
+            {
+                question: "What is a key message about diarrhoea prevention?",
+                options: ["Use untreated water", "Avoid sanitation", "It cannot be prevented", "Wash hands with soap to save lives"],
+                answer: "Wash hands with soap to save lives",
+                explanation: "Handwashing with soap is a simple, effective way to prevent diarrhoea and save lives, especially in children."
+            },
+            {
+                question: "What is a sign of dehydration in a child with diarrhoea?",
+                options: ["Clear skin", "Very dry mouth", "Normal energy", "Drinking eagerly"],
+                answer: "Very dry mouth",
+                explanation: "A very dry mouth is a sign of dehydration, showing the body lacks fluids due to diarrhoea."
+            },
+            {
+                question: "What should a CHV do if a child has diarrhoea with blood in the stool?",
+                options: ["Monitor for 24 hours", "Give zinc only", "Refer immediately", "Treat with ORS"],
+                answer: "Refer immediately",
+                explanation: "Bloody diarrhoea may indicate dysentery or severe infection, requiring urgent medical treatment beyond home care."
+            },
+            {
+                question: "What is a risk factor for diarrhoea?",
+                options: ["Handwashing", "Poor sanitation", "Clean water", "Breastfeeding"],
+                answer: "Poor sanitation",
+                explanation: "Poor sanitation increases exposure to faecal germs, a major risk factor for diarrhoea."
+            },
+            {
+                question: "What should a caregiver do if a child has mild diarrhoea?",
+                options: ["Avoid fluids", "Give ORS and continue feeding", "Stop feeding", "Wait 48 hours"],
+                answer: "Give ORS and continue feeding",
+                explanation: "ORS rehydrates the child, and continued feeding supports recovery from mild diarrhoea."
+            },
+            {
+                question: "What vaccine helps prevent diarrhoea?",
+                options: ["Tetanus vaccine", "Polio vaccine", "Rotavirus vaccine", "Measles vaccine"],
+                answer: "Rotavirus vaccine",
+                explanation: "The rotavirus vaccine protects against rotavirus, a leading cause of severe diarrhoea in young children."
+            },
+
+            // Water Treatment and ORS
+            {
+                question: "Which method is recommended to treat water and prevent diarrhoea?",
+                options: ["Adding sugar", "Storing in open containers", "Boiling", "Ignoring treatment"],
+                answer: "Boiling",
+                explanation: "Boiling kills germs in water, making it safe to drink and reducing the risk of diarrhoea."
+            },
+            {
+                question: "How much water is needed to prepare ORS?",
+                options: ["2 liters", "Half a liter (500 ml)", "1 liter", "100 ml"],
+                answer: "Half a liter (500 ml)",
+                explanation: "ORS packets are typically mixed with 500 ml of water to ensure the correct concentration for rehydration."
+            },
+            {
+                question: "What should be done if a child vomits after taking ORS?",
+                options: ["Refer to a hospital", "Give more immediately", "Wait 10 minutes, then continue slowly", "Stop giving fluids"],
+                answer: "Wait 10 minutes, then continue slowly",
+                explanation: "Waiting 10 minutes allows the stomach to settle, then giving ORS slowly helps prevent further vomiting."
+            },
+            {
+                question: "Which home fluid is recommended during rehydration?",
+                options: ["Dirty water", "Breast milk", "Soda", "Sugary drinks"],
+                answer: "Breast milk",
+                explanation: "Breast milk is safe, nutritious, and helps rehydrate infants while providing immune support."
+            },
+            {
+                question: "What is the purpose of adding zinc with ORS?",
+                options: ["To increase fever", "To sweeten the taste", "To replace food", "To stop dehydration and save lives"],
+                answer: "To stop dehydration and save lives",
+                explanation: "Zinc reduces the severity and duration of diarrhoea, complementing ORS to save lives."
+            },
+            {
+                question: "How much ORS should a child under 2 years take after each loose stool?",
+                options: ["500 ml", "200-400 ml", "50-100 ml", "1 liter"],
+                answer: "50-100 ml",
+                explanation: "Children under 2 need 50-100 ml of ORS per loose stool to replace fluids safely without overloading their system."
+            },
+            {
+                question: "What should a CHV do if ORS is not available?",
+                options: ["Stop treatment", "Refer immediately", "Advise home fluids like porridge water", "Wait for supplies"],
+                answer: "Advise home fluids like porridge water",
+                explanation: "Safe home fluids like porridge water can provide temporary hydration until ORS is available."
+            },
+            {
+                question: "How long can prepared ORS be stored?",
+                options: ["1 week", "48 hours", "24 hours", "12 hours"],
+                answer: "24 hours",
+                explanation: "Prepared ORS should be used within 24 hours to ensure it remains safe and effective."
+            },
+            {
+                question: "What is a sign that water is unsafe to drink?",
+                options: ["No smell", "Cloudy or dirty", "Cool temperature", "Clear appearance"],
+                answer: "Cloudy or dirty",
+                explanation: "Cloudy or dirty water may contain harmful germs or particles, making it unsafe to drink."
+            },
+            {
+                question: "What should a caregiver do to store treated water?",
+                options: ["Leave it in sunlight", "Use a clean, covered container", "Keep it in an open container", "Mix with untreated water"],
+                answer: "Use a clean, covered container",
+                explanation: "A clean, covered container prevents contamination of treated water, keeping it safe for use."
+            },
+
+            // Malaria
+            {
+                question: "How is malaria spread?",
+                options: ["Through handshakes", "By drinking water", "By mosquitoes", "By eating fruits"],
+                answer: "By mosquitoes",
+                explanation: "Malaria is transmitted through the bite of infected Anopheles mosquitoes, not by other means."
+            },
+            {
+                question: "What is a common symptom of malaria?",
+                options: ["Good appetite", "Fever/chills", "Normal temperature", "Clear skin"],
+                answer: "Fever/chills",
+                explanation: "Fever and chills are hallmark symptoms of malaria due to the parasite's effect on the body."
+            },
+            {
+                question: "What temperature indicates fever in a malaria case?",
+                options: ["35.4°C", "37.0°C", "38.0°C or above", "36.5°C"],
+                answer: "38.0°C or above",
+                explanation: "A temperature of 38.0°C or higher is considered a fever, common in malaria infections."
+            },
+            {
+                question: "What should be done if severe malaria signs like unconsciousness are observed?",
+                options: ["Give ORS", "Refer immediately", "Treat at home", "Wait 24 hours"],
+                answer: "Refer immediately",
+                explanation: "Unconsciousness in malaria indicates severe disease, requiring urgent hospital treatment."
+            },
+            {
+                question: "How can malaria be prevented?",
+                options: ["Avoiding nets", "Drinking untreated water", "Sleeping under insecticide-treated nets", "Staying outdoors at night"],
+                answer: "Sleeping under insecticide-treated nets",
+                explanation: "Insecticide-treated nets kill or repel mosquitoes, preventing malaria transmission during sleep."
+            },
+            {
+                question: "What does a positive malaria rapid test show?",
+                options: ["No lines", "Line in 'C' only", "Line in 'T' only", "Line in 'C' and 'T'"],
+                answer: "Line in 'C' and 'T'",
+                explanation: "A positive malaria test shows lines at both 'C' (control) and 'T' (test), confirming the presence of malaria antigens."
+            },
+            {
+                question: "How long should you wait to read a malaria rapid test result?",
+                options: ["30 minutes", "5 minutes", "20 minutes", "10 minutes"],
+                answer: "20 minutes",
+                explanation: "Waiting 20 minutes ensures the test result is accurate, as per standard rapid test protocols."
+            },
+            {
+                question: "What should be discarded in a sharps box during a malaria test?",
+                options: ["Test strip", "Gloves", "Lancet", "Buffer"],
+                answer: "Lancet",
+                explanation: "The lancet, a sharp object used to prick the skin, must be discarded in a sharps box for safety."
+            },
+            {
+                question: "What is a key message about sleeping under nets?",
+                options: ["Nets increase malaria risk", "Only adults need nets", "Nets are optional", "Young children and pregnant women should use LLINs"],
+                answer: "Young children and pregnant women should use LLINs",
+                explanation: "Long-lasting insecticidal nets (LLINs) are critical for protecting vulnerable groups like children and pregnant women from malaria."
+            },
+            {
+                question: "What should a CHV do if a child tests positive for malaria?",
+                options: ["Monitor for 48 hours", "Give ORS only", "Treat with antimalarial medicine", "Refer immediately"],
+                answer: "Treat with antimalarial medicine",
+                explanation: "A positive malaria test in a child requires treatment with antimalarial medicine as per CHV guidelines."
+            },
+
+            // COVID-19
+            {
+                question: "How is COVID-19 spread?",
+                options: ["Drinking clean water", "Contact with an infected person through coughing", "Eating healthy food", "Through clean surfaces"],
+                answer: "Contact with an infected person through coughing",
+                explanation: "COVID-19 spreads primarily through respiratory droplets from coughing or sneezing by an infected person."
+            },
+            {
+                question: "What is a recommended way to protect against COVID-19?",
+                options: ["Hug people with flu-like symptoms", "Wash hands with soap and water regularly", "Avoid handwashing", "Travel when sick"],
+                answer: "Wash hands with soap and water regularly",
+                explanation: "Regular handwashing removes the virus from hands, reducing the risk of infection."
+            },
+            {
+                question: "What should someone do if they arrive from a country reporting COVID-19?",
+                options: ["Visit friends immediately", "Ignore symptoms", "Isolate for 14 days", "Avoid isolation"],
+                answer: "Isolate for 14 days",
+                explanation: "Isolating for 14 days helps prevent potential spread if the person was exposed to COVID-19 during travel."
+            },
+            {
+                question: "Which symptom is associated with COVID-19?",
+                options: ["Clear breathing", "Normal temperature", "Body ache", "Improved appetite"],
+                answer: "Body ache",
+                explanation: "Body aches are a common symptom of COVID-19, often accompanying fever or fatigue."
+            },
+            {
+                question: "What is a key message for COVID-19 prevention?",
+                options: ["Ignore symptoms", "Avoid all contact forever", "Stop handwashing", "Protect yourself, family, and community"],
+                answer: "Protect yourself, family, and community",
+                explanation: "Preventing COVID-19 involves collective action to protect oneself and others through hygiene and precautions."
+            },
+            {
+                question: "What should a CHV do if someone shows COVID-19 symptoms?",
+                options: ["Treat at home", "Refer to a health facility", "Give ORS", "Ignore it"],
+                answer: "Refer to a health facility",
+                explanation: "COVID-19 symptoms require medical evaluation at a health facility for testing and management."
+            },
+            {
+                question: "What is a sign of severe COVID-19?",
+                options: ["Good energy", "Difficulty breathing", "Normal breathing", "Clear skin"],
+                answer: "Difficulty breathing",
+                explanation: "Difficulty breathing is a severe symptom of COVID-19, indicating possible lung involvement needing urgent care."
+            },
+            {
+                question: "What should a caregiver avoid during a COVID-19 outbreak?",
+                options: ["Fresh air", "Clean surfaces", "Crowded places", "Handwashing"],
+                answer: "Crowded places",
+                explanation: "Crowded places increase the risk of COVID-19 transmission through close contact with infected individuals."
+            },
+            {
+                question: "What should be worn to reduce COVID-19 spread?",
+                options: ["Sunglasses", "Face mask", "Gloves", "Hat"],
+                answer: "Face mask",
+                explanation: "Face masks reduce the spread of respiratory droplets, a primary transmission route for COVID-19."
+            },
+            {
+                question: "What is a key prevention method for COVID-19?",
+                options: ["Sharing utensils", "Covering mouth when coughing", "Coughing openly", "Avoiding masks"],
+                answer: "Covering mouth when coughing",
+                explanation: "Covering the mouth when coughing prevents the spread of droplets that carry the COVID-19 virus."
+            },
+
+            // Pregnancy and Newborn Care
+            {
+                question: "What is a danger sign during pregnancy?",
+                options: ["Good appetite", "Vaginal bleeding", "Normal weight gain", "Feeling energetic"],
+                answer: "Vaginal bleeding",
+                explanation: "Vaginal bleeding during pregnancy can indicate miscarriage or placenta issues, requiring immediate medical attention."
+            },
+            {
+                question: "How many visits should a CHV make for a normal pregnancy?",
+                options: ["1", "6", "4", "2"],
+                answer: "4",
+                explanation: "Four visits allow the CHV to monitor the pregnancy, prepare a birth plan, and ensure the mother's health."
+            },
+            {
+                question: "What should a CHV do during the second pregnancy visit?",
+                options: ["Check temperature", "Prepare a birth plan", "Give medication", "Refer immediately"],
+                answer: "Prepare a birth plan",
+                explanation: "The second visit focuses on preparing a birth plan to ensure a safe delivery, including where and how to give birth."
+            },
+            {
+                question: "What is a danger sign after delivery?",
+                options: ["Good sleep", "Heavy bleeding", "Normal breastfeeding", "Clear skin"],
+                answer: "Heavy bleeding",
+                explanation: "Heavy bleeding post-delivery may signal postpartum hemorrhage, a life-threatening condition needing urgent care."
+            },
+            {
+                question: "What is the best care for a newborn?",
+                options: ["Bathing immediately", "Giving sugary water", "Exclusive breastfeeding", "Avoiding skin-to-skin contact"],
+                answer: "Exclusive breastfeeding",
+                explanation: "Exclusive breastfeeding provides optimal nutrition and immunity for newborns in the first 6 months."
+            },
+            {
+                question: "When should a CHV visit a newborn after delivery?",
+                options: ["Day 7", "Day 1 or 2", "Day 14", "Day 30"],
+                answer: "Day 1 or 2",
+                explanation: "Visiting on Day 1 or 2 allows early detection of issues like poor feeding or infection in the newborn."
+            },
+            {
+                question: "What should a mother do immediately after delivery?",
+                options: ["Give water", "Put the baby skin-to-skin", "Bathe the baby", "Wrap in a blanket"],
+                answer: "Put the baby skin-to-skin",
+                explanation: "Skin-to-skin contact regulates the baby's temperature and promotes bonding and breastfeeding."
+            },
+            {
+                question: "What is a sign of infection in a newborn?",
+                options: ["Good feeding", "Redness around the umbilical cord", "Normal breathing", "Clear skin"],
+                answer: "Redness around the umbilical cord",
+                explanation: "Redness around the umbilical cord can indicate an infection, which is dangerous for newborns and needs treatment."
+            },
+            {
+                question: "What supplement should pregnant women take?",
+                options: ["Painkillers", "Vitamin C", "Iron and folate tablets", "Sugar syrup"],
+                answer: "Iron and folate tablets",
+                explanation: "Iron and folate prevent anemia and support fetal development during pregnancy."
+            },
+            {
+                question: "What should a CHV counsel a pregnant woman about?",
+                options: ["Skipping meals", "Attending antenatal care", "Avoiding health facilities", "Delivering at home"],
+                answer: "Attending antenatal care",
+                explanation: "Antenatal care ensures the health of the mother and baby through regular check-ups and interventions."
+            },
+
+            // Nutrition
+            {
+                question: "What nutrient source is recommended for children?",
+                options: ["Processed foods", "Only water", "Common foods like vegetables and fruits", "Sugary snacks"],
+                answer: "Common foods like vegetables and fruits",
+                explanation: "Vegetables and fruits provide essential vitamins, minerals, and fiber for healthy child growth."
+            },
+            {
+                question: "When should complementary feeding begin?",
+                options: ["At 1 year", "After 6 months", "At birth", "At 2 years"],
+                answer: "After 6 months",
+                explanation: "Complementary feeding starts at 6 months alongside breastfeeding to meet growing nutritional needs."
+            },
+            {
+                question: "What is a sign of malnutrition related to hair?",
+                options: ["Normal black hair", "Red/yellow and scanty hair", "Thick and shiny hair", "Long hair"],
+                answer: "Red/yellow and scanty hair",
+                explanation: "Red/yellow, scanty hair indicates protein deficiency, a common sign of malnutrition like kwashiorkor."
+            },
+            {
+                question: "What should a CHV counsel a caregiver to do for a child with normal MUAC results?",
+                options: ["Stop feeding", "Maintain proper feeding", "Give supplements", "Refer to a facility"],
+                answer: "Maintain proper feeding",
+                explanation: "Normal MUAC indicates good nutrition, so maintaining proper feeding prevents future issues."
+            },
+            {
+                question: "What is a key message about malnutrition?",
+                options: ["It improves with sugary foods", "Lack of proper feeding leads to malnutrition", "It cannot be prevented", "It only affects adults"],
+                answer: "Lack of proper feeding leads to malnutrition",
+                explanation: "Inadequate nutrition is the root cause of malnutrition, preventable with proper feeding practices."
+            },
+            {
+                question: "What should a child eat after 6 months?",
+                options: ["Water only", "Breast milk and soft foods", "Sugary drinks", "Only breast milk"],
+                answer: "Breast milk and soft foods",
+                explanation: "After 6 months, breast milk plus soft foods provide the additional nutrients a growing child needs."
+            },
+            {
+                question: "What vitamin helps prevent blindness in children?",
+                options: ["Vitamin D", "Vitamin A", "Vitamin C", "Vitamin B"],
+                answer: "Vitamin A",
+                explanation: "Vitamin A is essential for eye health, and its deficiency can lead to blindness in children."
+            },
+            {
+                question: "How often should a child receive Vitamin A supplements?",
+                options: ["Every year", "Every 6 months", "Every month", "Every 2 years"],
+                answer: "Every 6 months",
+                explanation: "Vitamin A supplements every 6 months prevent deficiency and support vision and immunity in children."
+            },
+            {
+                question: "What is a sign of good nutrition in a child?",
+                options: ["Swollen legs", "Normal growth and energy", "Thin arms", "Dry hair"],
+                answer: "Normal growth and energy",
+                explanation: "Normal growth and energy levels indicate a child is well-nourished and healthy."
+            },
+            {
+                question: "What should a caregiver avoid feeding a child under 6 months?",
+                options: ["Breast milk", "Water or other liquids", "Soft porridge", "Fruits"],
+                answer: "Water or other liquids",
+                explanation: "Under 6 months, only breast milk is needed; water or other liquids can interfere with nutrition and increase infection risk."
+            },
+
+            // Family Planning
+            {
+                question: "What is the effectiveness of a male condom with correct and consistent use?",
+                options: ["75%", "50%", "98%", "100%"],
+                answer: "98%",
+                explanation: "When used correctly and consistently, male condoms are 98% effective at preventing pregnancy."
+            },
+            {
+                question: "Who cannot use combined oral contraceptives (the Pill)?",
+                options: ["Teenagers", "Women with breast cancer", "Healthy women", "Pregnant women"],
+                answer: "Women with breast cancer",
+                explanation: "Combined oral contraceptives are contraindicated in women with breast cancer due to hormonal risks."
+            },
+            {
+                question: "What should a woman do if she misses a dose of the minipill?",
+                options: ["Double the next dose", "Take it as soon as she remembers", "Skip it entirely", "Stop using it"],
+                answer: "Take it as soon as she remembers",
+                explanation: "Taking the minipill as soon as remembered maintains its effectiveness; doubling doses is not advised."
+            },
+            {
+                question: "What is a key benefit of the female condom?",
+                options: ["It is reusable", "It protects against STIs, including HIV", "It requires no lubrication", "It is permanent"],
+                answer: "It protects against STIs, including HIV",
+                explanation: "The female condom provides a barrier that protects against sexually transmitted infections, including HIV."
+            },
+            {
+                question: "Which method is a long-term family planning option?",
+                options: ["Condoms", "Minipill", "Hormonal implants", "ORS"],
+                answer: "Hormonal implants",
+                explanation: "Hormonal implants provide contraception for several years, making them a long-term option."
+            },
+            {
+                question: "How long can hormonal implants prevent pregnancy?",
+                options: ["6 months", "3-5 years", "1 year", "10 years"],
+                answer: "3-5 years",
+                explanation: "Hormonal implants release hormones to prevent pregnancy for 3-5 years, depending on the type."
+            },
+            {
+                question: "What should a CHV do if a woman wants family planning?",
+                options: ["Give medication at home", "Refer to a health facility", "Ignore the request", "Advise against it"],
+                answer: "Refer to a health facility",
+                explanation: "CHVs should refer women to health facilities for proper family planning counseling and methods."
+            },
+            {
+                question: "What is a side effect of the Pill?",
+                options: ["Clear skin", "Nausea", "Improved appetite", "More energy"],
+                answer: "Nausea",
+                explanation: "Nausea is a common side effect of oral contraceptives due to hormonal changes in the body."
+            },
+            {
+                question: "What is a benefit of family planning?",
+                options: ["Reducing breastfeeding", "Spacing births for healthier families", "Increasing malnutrition", "Avoiding healthcare"],
+                answer: "Spacing births for healthier families",
+                explanation: "Spacing births allows mothers to recover and children to thrive, improving family health."
+            },
+            {
+                question: "What should a man do if a condom breaks?",
+                options: ["Reuse it", "Seek advice from a health facility", "Ignore it", "Stop using condoms"],
+                answer: "Seek advice from a health facility",
+                explanation: "A broken condom may lead to pregnancy or STIs, so seeking health advice is crucial."
+            },
+
+            // Dosage and Treatment
+            {
+                question: "What medication is used for fast breathing with a cough less than 2 weeks?",
+                options: ["ORS", "Vitamin A", "Dispersible Amoxil", "Zinc"],
+                answer: "Dispersible Amoxil",
+                explanation: "Dispersible Amoxil (amoxicillin) treats pneumonia, indicated by fast breathing and cough, in children."
+            },
+            {
+                question: "How long should zinc be given for diarrhoea in children?",
+                options: ["1 day", "3 days", "14 days", "10 days"],
+                answer: "10 days",
+                explanation: "Zinc is given for 10 days to reduce diarrhoea severity and duration, boosting recovery."
+            },
+            {
+                question: "What should a CHV do if a child with diarrhoea shows signs of severe dehydration?",
+                options: ["Wait 48 hours", "Refer to a health centre immediately", "Give ORS at home", "Stop fluids"],
+                answer: "Refer to a health centre immediately",
+                explanation: "Severe dehydration requires IV fluids and medical care, beyond what a CHV can provide at home."
+            },
+            {
+                question: "What supplement is given to pregnant women?",
+                options: ["Vitamin C", "Iron and folate tablets", "Painkillers", "Sugar syrup"],
+                answer: "Iron and folate tablets",
+                explanation: "Iron and folate prevent anemia and support fetal development during pregnancy."
+            },
+            {
+                question: "What is the treatment for fever and pain in malaria cases?",
+                options: ["Zinc", "Paracetamol", "ORS", "Amoxil"],
+                answer: "Paracetamol",
+                explanation: "Paracetamol reduces fever and pain in malaria, complementing antimalarial treatment."
+            },
+            {
+                question: "How many dispersible Amoxil tablets should a child aged 2-12 months take daily?",
+                options: ["4 tablets", "2 tablets", "1 tablet", "3 tablets"],
+                answer: "2 tablets",
+                explanation: "For children 2-12 months, 2 dispersible Amoxil tablets daily treat pneumonia effectively."
+            },
+            {
+                question: "What is the dosage of paracetamol for a child with fever?",
+                options: ["2 tablets at once", "Based on weight", "1 tablet daily", "No specific dose"],
+                answer: "Based on weight",
+                explanation: "Paracetamol dosage depends on a child's weight to ensure safety and effectiveness."
+            },
+            {
+                question: "What should a CHV do if a child does not improve after 48 hours of treatment?",
+                options: ["Increase the dose", "Refer to a health facility", "Continue the same treatment", "Stop medication"],
+                answer: "Refer to a health facility",
+                explanation: "No improvement after 48 hours suggests a need for further medical evaluation and possibly stronger treatment."
+            },
+            {
+                question: "How many days should Amoxil be given for pneumonia?",
+                options: ["7 days", "5 days", "3 days", "10 days"],
+                answer: "5 days",
+                explanation: "A 5-day course of Amoxil is standard for treating uncomplicated pneumonia in children."
+            },
+            {
+                question: "What should a CHV check before giving any medication?",
+                options: ["Caregiver's age", "Dosage and danger signs", "Child's hair color", "Room temperature"],
+                answer: "Dosage and danger signs",
+                explanation: "Checking dosage ensures safety, and danger signs indicate if referral is needed instead."
+            },
+
+            // Follow-Up Protocol
+            {
+                question: "When should a CHV follow up with a sick child treated at home?",
+                options: ["After 1 month", "Within 48 hours", "After 1 week", "Within 24 hours"],
+                answer: "Within 48 hours",
+                explanation: "Following up within 48 hours ensures the child is improving and catches any worsening early."
+            },
+            {
+                question: "What should a CHV check during a follow-up visit for a sick child?",
+                options: ["The child's hair color", "If the caregiver is giving medicine", "The caregiver's diet", "The child's weight"],
+                answer: "If the caregiver is giving medicine",
+                explanation: "Ensuring medicine is given correctly is key to recovery during a follow-up visit."
+            },
+            {
+                question: "If a referred child did not go to a health facility, what should the CHV do?",
+                options: ["Wait another day", "Encourage the caregiver to take the child", "Give more medicine", "Ignore it"],
+                answer: "Encourage the caregiver to take the child",
+                explanation: "Encouraging the caregiver ensures the child gets needed care without delay."
+            },
+            {
+                question: "How often should a CHV visit a pregnant woman with no danger signs?",
+                options: ["Twice a week", "Four times", "Every day", "Once"],
+                answer: "Four times",
+                explanation: "Four visits throughout pregnancy allow monitoring and support for a healthy outcome."
+            },
+            {
+                question: "What should a CHV do if a child develops danger signs during follow-up?",
+                options: ["Wait 48 hours", "Refer the child and follow up in 24 hours", "Continue home treatment", "Stop medication"],
+                answer: "Refer the child and follow up in 24 hours",
+                explanation: "Danger signs require referral, with a 24-hour follow-up to ensure the child gets care."
+            },
+            {
+                question: "What should a CHV do if a caregiver stops giving prescribed medicine?",
+                options: ["Stop visiting", "Counsel on importance and encourage continuation", "Ignore it", "Refer immediately"],
+                answer: "Counsel on importance and encourage continuation",
+                explanation: "Counseling helps the caregiver understand the need for medicine to ensure the child's recovery."
+            },
+            {
+                question: "When should a CHV follow up after referring a newborn?",
+                options: ["Within 24 hours", "After 1 month", "Within 48 hours", "After 1 week"],
+                answer: "Within 24 hours",
+                explanation: "A 24-hour follow-up ensures the newborn received care due to their vulnerability."
+            },
+            {
+                question: "What should a CHV do if a child improves after treatment?",
+                options: ["Give more medicine", "Praise the caregiver and counsel on prevention", "Refer to a facility", "Stop follow-up"],
+                answer: "Praise the caregiver and counsel on prevention",
+                explanation: "Praising reinforces good care, and counseling prevents future illness."
+            },
+            {
+                question: "What is a key follow-up action for a malnourished child?",
+                options: ["Refer every time", "Check MUAC again", "Ignore the child", "Stop feeding advice"],
+                answer: "Check MUAC again",
+                explanation: "Rechecking MUAC monitors nutritional progress and guides further action."
+            },
+            {
+                question: "What should a CHV do if a pregnant woman misses a visit?",
+                options: ["Refer her immediately", "Visit her home to check on her", "Wait for her to come", "Stop monitoring"],
+                answer: "Visit her home to check on her",
+                explanation: "Visiting ensures the woman's health is monitored and any issues are addressed promptly."
+            },
+
+            // Additional Topics
+            {
+                question: "What should a CHV do if a child has a fever for more than 7 days?",
+                options: ["Monitor for 48 hours", "Give ORS", "Refer immediately", "Treat at home"],
+                answer: "Refer immediately",
+                explanation: "Fever lasting over 7 days could indicate a serious condition like malaria or TB, needing urgent care."
+            },
+            {
+                question: "What is a sign of tuberculosis in children?",
+                options: ["Normal weight", "Cough for more than 2 weeks", "Good appetite", "Clear breathing"],
+                answer: "Cough for more than 2 weeks",
+                explanation: "A persistent cough over 2 weeks is a key symptom of tuberculosis in children."
+            },
+            {
+                question: "What should a CHV do if a child has a cough for more than 2 weeks?",
+                options: ["Monitor for 48 hours", "Refer to a health facility", "Give zinc", "Treat with Amoxil"],
+                answer: "Refer to a health facility",
+                explanation: "A cough lasting over 2 weeks may indicate TB or another serious condition, requiring medical evaluation."
+            },
+            {
+                question: "What is a key message about immunization?",
+                options: ["Vaccines cause illness", "Vaccines are optional", "Vaccines save lives", "Vaccines are only for adults"],
+                answer: "Vaccines save lives",
+                explanation: "Vaccines prevent deadly diseases, saving lives by boosting immunity in children."
+            },
+            {
+                question: "When should a child receive the measles vaccine?",
+                options: ["At 5 years", "At 9 months", "At birth", "At 2 years"],
+                answer: "At 9 months",
+                explanation: "The measles vaccine is given at 9 months to protect against this highly contagious disease."
+            },
+            {
+                question: "What should a CHV do if a child misses a vaccine?",
+                options: ["Wait a year", "Refer to a health facility for catch-up", "Ignore it", "Stop all vaccines"],
+                answer: "Refer to a health facility for catch-up",
+                explanation: "Catch-up vaccination ensures the child is protected despite missing a scheduled dose."
+            },
+            {
+                question: "What is a sign of meningitis in children?",
+                options: ["Good appetite", "Stiff neck", "Normal neck movement", "Clear skin"],
+                answer: "Stiff neck",
+                explanation: "A stiff neck is a classic sign of meningitis, a dangerous infection of the brain and spinal cord."
+            },
+            {
+                question: "What should a CHV do if a child has a stiff neck and fever?",
+                options: ["Monitor for 24 hours", "Refer immediately", "Treat at home", "Give paracetamol"],
+                answer: "Refer immediately",
+                explanation: "Stiff neck with fever suggests meningitis, requiring urgent medical treatment to prevent complications."
+            },
+            {
+                question: "What is a key message about handwashing?",
+                options: ["It causes dryness", "It is unnecessary", "It prevents disease spread", "It only helps adults"],
+                answer: "It prevents disease spread",
+                explanation: "Handwashing prevents the spread of germs that cause diseases like diarrhoea and pneumonia."
+            },
+            {
+                question: "What should a CHV do if a household lacks a latrine?",
+                options: ["Stop visiting", "Counsel on sanitation and refer to local leaders", "Ignore it", "Provide medicine"],
+                answer: "Counsel on sanitation and refer to local leaders",
+                explanation: "Counseling and referral promote sanitation improvements, reducing disease risk."
+            },
+            {
+                question: "What is a sign of anemia in pregnant women?",
+                options: ["Good appetite", "Pale skin", "Normal energy", "Clear eyes"],
+                answer: "Pale skin",
+                explanation: "Pale skin indicates low red blood cells, a common sign of anemia in pregnancy."
+            },
+            {
+                question: "What should a CHV do if a pregnant woman has pale skin?",
+                options: ["Monitor for a week", "Refer to a health facility", "Give food at home", "Ignore it"],
+                answer: "Refer to a health facility",
+                explanation: "Pale skin may signal anemia, requiring medical evaluation and possibly iron supplements."
+            },
+            {
+                question: "What is a key message about breastfeeding?",
+                options: ["Mix with water", "Exclusive breastfeeding saves lives", "Start after 6 months", "Avoid colostrum"],
+                answer: "Exclusive breastfeeding saves lives",
+                explanation: "Exclusive breastfeeding for 6 months provides optimal nutrition and protection, saving infant lives."
+            },
+            {
+                question: "What should a CHV do if a newborn is not breastfeeding?",
+                options: ["Monitor for 48 hours", "Refer immediately", "Give sugary water", "Ignore it"],
+                answer: "Refer immediately",
+                explanation: "A newborn not breastfeeding is at risk of malnutrition and infection, needing urgent medical help."
+            },
+            {
+                question: "What is a sign of dehydration in a newborn?",
+                options: ["Clear urine", "Sunken fontanelle", "Normal crying", "Good feeding"],
+                answer: "Sunken fontanelle",
+                explanation: "A sunken fontanelle indicates dehydration in a newborn, a serious condition needing attention."
+            },
+            {
+                question: "What should a CHV do if a child has a burn?",
+                options: ["Apply oil", "Cool with water and refer if severe", "Cover with a blanket", "Ignore it"],
+                answer: "Cool with water and refer if severe",
+                explanation: "Cooling with water reduces damage, and severe burns need medical care beyond home treatment."
+            },
+            {
+                question: "What is a key message about burns?",
+                options: ["Use hot water for treatment", "Keep children away from fire", "Burns cannot be prevented", "Ignore small burns"],
+                answer: "Keep children away from fire",
+                explanation: "Keeping children away from fire prevents burns, a common and avoidable injury."
+            },
+            {
+                question: "What should a CHV do if a child swallows poison?",
+                options: ["Induce vomiting", "Refer immediately", "Give milk", "Monitor for 24 hours"],
+                answer: "Refer immediately",
+                explanation: "Swallowing poison is an emergency requiring immediate medical attention; home remedies can worsen it."
+            },
+            {
+                question: "What is a sign of poisoning in a child?",
+                options: ["Good appetite", "Vomiting or drowsiness", "Normal breathing", "Clear skin"],
+                answer: "Vomiting or drowsiness",
+                explanation: "Vomiting or drowsiness are common signs of poisoning, indicating the body's reaction to a toxic substance."
+            },
+            {
+                question: "What should a CHV do if a child has a cut with heavy bleeding?",
+                options: ["Wash with dirty water", "Apply pressure and refer if severe", "Wait 48 hours", "Ignore it"],
+                answer: "Apply pressure and refer if severe",
+                explanation: "Applying pressure stops bleeding, and severe cases need medical care to prevent complications."
+            },
+            {
+                question: "What is a key message about injury prevention?",
+                options: ["Avoid first aid", "Supervise children to prevent injuries", "Keep sharp objects within reach", "Ignore small cuts"],
+                answer: "Supervise children to prevent injuries",
+                explanation: "Supervision reduces the risk of injuries like cuts or burns by keeping children safe."
+            },
+            {
+                question: "What should a CHV do if a child has a fever and rash?",
+                options: ["Monitor for 48 hours", "Refer to a health facility", "Give ORS", "Treat with Amoxil"],
+                answer: "Refer to a health facility",
+                explanation: "Fever with a rash could indicate measles or another serious illness, needing medical diagnosis."
+            },
+            {
+                question: "What is a sign of measles?",
+                options: ["Good breathing", "Rash with fever", "Clear skin", "Normal eyes"],
+                answer: "Rash with fever",
+                explanation: "Measles typically presents with a rash and fever, a contagious disease requiring attention."
+            },
+            {
+                question: "What should a CHV do if a child has eye discharge?",
+                options: ["Wash with dirty water", "Refer to a health facility", "Ignore it", "Monitor for a week"],
+                answer: "Refer to a health facility",
+                explanation: "Eye discharge may indicate an infection like conjunctivitis, needing medical treatment."
+            },
+            {
+                question: "What is a key message about eye care?",
+                options: ["Avoid washing", "Keep eyes clean to prevent infection", "Rub eyes with dirty hands", "Ignore redness"],
+                answer: "Keep eyes clean to prevent infection",
+                explanation: "Keeping eyes clean prevents infections that can lead to serious complications."
+            },
+            {
+                question: "What should a CHV do if a child has ear pain?",
+                options: ["Apply oil", "Refer to a health facility", "Give ORS", "Ignore it"],
+                answer: "Refer to a health facility",
+                explanation: "Ear pain may indicate an infection needing medical treatment, not just home remedies."
+            },
+            {
+                question: "What is a sign of an ear infection?",
+                options: ["Good appetite", "Pus from the ear", "Normal hearing", "Clear skin"],
+                answer: "Pus from the ear",
+                explanation: "Pus from the ear is a clear sign of an ear infection, requiring medical attention."
+            },
+            {
+                question: "What should a CHV do if a household has no clean water?",
+                options: ["Stop visiting", "Counsel on water treatment", "Ignore it", "Refer to a doctor"],
+                answer: "Counsel on water treatment",
+                explanation: "Counseling on water treatment ensures the household can access safe water, reducing disease risk."
+            },
+            {
+                question: "What is a key message about sanitation?",
+                options: ["Share dirty water", "Use latrines to prevent disease", "Open defecation is safe", "Avoid cleaning"],
+                answer: "Use latrines to prevent disease",
+                explanation: "Using latrines prevents faecal contamination, reducing the spread of diseases like diarrhoea."
+            },
+            {
+                question: "What should a CHV do if a community member refuses help?",
+                options: ["Force treatment", "Respect their choice and offer support later", "Refer immediately", "Stop visiting"],
+                answer: "Respect their choice and offer support later",
+                explanation: "Respecting refusal builds trust, keeping the door open for future support when they're ready."
+            }
+        ];
+
+        // DOM Elements
+        const quizIntro = document.getElementById('quizIntro');
+        const quizScreen = document.getElementById('quizScreen');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resourcesContainer = document.getElementById('resourcesContainer');
+        const startBtn = document.getElementById('startBtn');
+        const resourcesBtn = document.getElementById('resourcesBtn');
+        const backBtn = document.getElementById('backBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const questionCount = document.getElementById('questionCount');
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const timerElement = document.getElementById('timer');
+        const progressBar = document.getElementById('progressBar');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const resultsList = document.getElementById('resultsList');
+        const badge = document.getElementById('badge');
+        const perfectScoreCounter = document.getElementById('perfectScoreCounter');
+        const celebrationContainer = document.getElementById('celebration');
+        const pdfViewerContainer = document.getElementById('pdfViewerContainer');
+        const pdfViewerFrame = document.getElementById('pdfViewerFrame');
+        const pdfViewerTitle = document.getElementById('pdfViewerTitle');
+        const pdfViewerClose = document.getElementById('pdfViewerClose');
+        const resourceButtons = document.querySelectorAll('.resource-btn');
+
+        // Quiz Variables
+        let currentQuestionIndex = 0;
+        let selectedQuestions = [];
+        let userAnswers = [];
+        let score = 0;
+        let timer;
+        let timeLeft = 60;
+        let perfectScores = localStorage.getItem('perfectScores') ? parseInt(localStorage.getItem('perfectScores')) : 0;
+
+        // Initialize the quiz
+        function initQuiz() {
+            // Update perfect score counter
+            perfectScoreCounter.textContent = `Perfect Scores: ${perfectScores}`;
+            
+            // Select 10 random unique questions
+            selectedQuestions = [...questions]
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 10);
+            
+            userAnswers = Array(selectedQuestions.length).fill(null);
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            // Hide intro and results, show quiz
+            quizIntro.style.display = 'none';
+            resultsContainer.style.display = 'none';
+            resourcesContainer.style.display = 'none';
+            quizScreen.style.display = 'block';
+            
+            // Load first question
+            loadQuestion();
+        }
+
+        // Load a question
+        function loadQuestion() {
+            // Reset timer
+            clearInterval(timer);
+            timeLeft = 60;
+            updateTimerDisplay();
+            
+            // Start timer
+            timer = setInterval(updateTimer, 1000);
+            
+            // Update progress
+            updateProgress();
+            
+            // Get current question
+            const currentQuestion = selectedQuestions[currentQuestionIndex];
+            
+            // Update question count
+            questionCount.textContent = `Question ${currentQuestionIndex + 1} of ${selectedQuestions.length}`;
+            
+            // Set question text
+            questionElement.textContent = currentQuestion.question;
+            
+            // Clear previous options
+            optionsElement.innerHTML = '';
+            
+            // Add options
+            currentQuestion.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.textContent = option;
+                optionElement.dataset.index = index;
+                
+                // Add emoji placeholder
+                const emoji = document.createElement('span');
+                emoji.classList.add('option-emoji');
+                optionElement.appendChild(emoji);
+                
+                // Add click event
+                optionElement.addEventListener('click', () => selectOption(optionElement, index));
+                
+                optionsElement.appendChild(optionElement);
+            });
+            
+            // Disable next button initially
+            nextBtn.disabled = true;
+        }
+
+        // Update timer
+        function updateTimer() {
+            timeLeft--;
+            updateTimerDisplay();
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                timeUp();
+            } else if (timeLeft <= 10) {
+                timerElement.classList.add('warning');
+            }
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `⏱️ ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        // Time's up handler
+        function timeUp() {
+            // If user hasn't answered, answer for them (wrong)
+            if (userAnswers[currentQuestionIndex] === null) {
+                const options = document.querySelectorAll('.option');
+                options.forEach(option => option.style.pointerEvents = 'none');
+                
+                userAnswers[currentQuestionIndex] = -1; // Mark as unanswered
+                
+                // Highlight correct answer
+                const correctAnswer = selectedQuestions[currentQuestionIndex].answer;
+                const correctIndex = selectedQuestions[currentQuestionIndex].options.indexOf(correctAnswer);
+                options[correctIndex].classList.add('correct');
+                options[correctIndex].querySelector('.option-emoji').textContent = '😊';
+                options[correctIndex].querySelector('.option-emoji').style.opacity = '1';
+                
+                // Enable next button
+                nextBtn.disabled = false;
+            }
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const progress = (currentQuestionIndex / selectedQuestions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        // Select an option
+        function selectOption(optionElement, optionIndex) {
+            // If already answered, do nothing
+            if (userAnswers[currentQuestionIndex] !== null) return;
+            
+            // Stop timer
+            clearInterval(timer);
+            
+            // Get correct answer
+            const correctAnswer = selectedQuestions[currentQuestionIndex].answer;
+            const correctIndex = selectedQuestions[currentQuestionIndex].options.indexOf(correctAnswer);
+            
+            // Store user's answer
+            userAnswers[currentQuestionIndex] = optionIndex;
+            
+            // Disable all options
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+            
+            // Check if answer is correct
+            const isCorrect = selectedQuestions[currentQuestionIndex].options[optionIndex] === correctAnswer;
+            
+            if (isCorrect) {
+                score++;
+                optionElement.classList.add('correct');
+                optionElement.querySelector('.option-emoji').textContent = '😊';
+            } else {
+                optionElement.classList.add('incorrect');
+                optionElement.querySelector('.option-emoji').textContent = '😢';
+                options[correctIndex].classList.add('correct');
+                options[correctIndex].querySelector('.option-emoji').textContent = '😊';
+            }
+            
+            // Show emojis
+            optionElement.querySelector('.option-emoji').style.opacity = '1';
+            options[correctIndex].querySelector('.option-emoji').style.opacity = '1';
+            
+            // Enable next button
+            nextBtn.disabled = false;
+        }
+
+        // Show results
+        function showResults() {
+            // Hide quiz screen
+            quizScreen.style.display = 'none';
+            
+            // Show results container
+            resultsContainer.style.display = 'block';
+            
+            // Update score display
+            scoreDisplay.textContent = `Score: ${score}/${selectedQuestions.length}`;
+            
+            // Check for perfect score (10/10)
+            if (score === 10) {
+                badge.style.display = 'block';
+                perfectScores++;
+                localStorage.setItem('perfectScores', perfectScores);
+                perfectScoreCounter.textContent = `Perfect Scores: ${perfectScores}`;
+                triggerCelebration();
+            } else {
+                badge.style.display = 'none';
+            }
+            
+            // Clear previous results
+            resultsList.innerHTML = '';
+            
+            // Add each question result
+            selectedQuestions.forEach((question, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.classList.add('result-item');
+                
+                let isCorrect = false;
+                let userAnswerText = "No answer provided";
+                
+                if (userAnswers[index] !== null && userAnswers[index] !== -1) {
+                    userAnswerText = question.options[userAnswers[index]];
+                    isCorrect = (userAnswerText === question.answer);
+                } else if (userAnswers[index] === -1) {
+                    userAnswerText = "Time expired (no answer)";
+                }
+                
+                if (isCorrect) {
+                    resultItem.classList.add('correct');
+                } else {
+                    resultItem.classList.add('incorrect');
+                }
+                
+                const resultQuestion = document.createElement('div');
+                resultQuestion.classList.add('result-question');
+                resultQuestion.textContent = `${index + 1}. ${question.question}`;
+                
+                const userAnswerDiv = document.createElement('div');
+                userAnswerDiv.classList.add('user-answer');
+                userAnswerDiv.classList.add(isCorrect ? 'correct' : 'incorrect');
+                
+                const answerMarker = document.createElement('span');
+                answerMarker.classList.add('answer-marker');
+                answerMarker.textContent = isCorrect ? '✓' : '✗';
+                
+                const userAnswerTextSpan = document.createElement('span');
+                userAnswerTextSpan.textContent = userAnswerText;
+                
+                userAnswerDiv.appendChild(answerMarker);
+                userAnswerDiv.appendChild(userAnswerTextSpan);
+                
+                const correctAnswerDiv = document.createElement('div');
+                correctAnswerDiv.classList.add('correct-answer');
+                
+                const correctMarker = document.createElement('span');
+                correctMarker.classList.add('answer-marker');
+                correctMarker.textContent = '✓';
+                
+                const correctAnswerText = document.createElement('span');
+                correctAnswerText.textContent = question.answer;
+                
+                correctAnswerDiv.appendChild(correctMarker);
+                correctAnswerDiv.appendChild(correctAnswerText);
+                
+                const explanation = document.createElement('div');
+                explanation.classList.add('explanation');
+                explanation.textContent = question.explanation;
+                
+                resultItem.appendChild(resultQuestion);
+                if (!isCorrect || userAnswers[index] === -1) {
+                    resultItem.appendChild(userAnswerDiv);
+                    resultItem.appendChild(correctAnswerDiv);
+                } else {
+                    resultItem.appendChild(userAnswerDiv);
+                }
+                resultItem.appendChild(explanation);
+                
+                resultsList.appendChild(resultItem);
+            });
+        }
+
+        // Show resources
+        function showResources() {
+            quizIntro.style.display = 'none';
+            quizScreen.style.display = 'none';
+            resultsContainer.style.display = 'none';
+            resourcesContainer.style.display = 'block';
+        }
+
+        // Show PDF in viewer
+        function showPdf(url, title) {
+            pdfViewerTitle.textContent = title;
+            pdfViewerFrame.src = url;
+            pdfViewerContainer.style.display = 'flex';
+        }
+
+        // Close PDF viewer
+        function closePdfViewer() {
+            pdfViewerContainer.style.display = 'none';
+            pdfViewerFrame.src = '';
+        }
+
+        // Trigger celebration animation
+        function triggerCelebration() {
+            celebrationContainer.style.display = 'block';
+            celebrationContainer.innerHTML = '';
+            
+            // Create multiple types of celebratory elements
+            const emojis = ['😊', '🎉', '💯', '🏆', '✨', '👍', '👏', '🥇'];
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
+            
+            // Create confetti
+            for (let i = 0; i < 200; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // Random properties
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = Math.random() * 15 + 5;
+                const left = Math.random() * 100;
+                const animationDuration = Math.random() * 3 + 2;
+                const delay = Math.random() * 5;
+                
+                // Apply styles
+                confetti.style.backgroundColor = color;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.left = `${left}%`;
+                confetti.style.animationDuration = `${animationDuration}s`;
+                confetti.style.animationDelay = `${delay}s`;
+                
+                // Random shape (circle or square)
+                if (Math.random() > 0.5) {
+                    confetti.style.borderRadius = '50%';
+                }
+                
+                celebrationContainer.appendChild(confetti);
+            }
+            
+            // Create emoji shower
+            for (let i = 0; i < 50; i++) {
+                const emoji = document.createElement('div');
+                emoji.classList.add('emoji-shower');
+                emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                
+                // Random properties
+                const left = Math.random() * 100;
+                const delay = Math.random() * 3;
+                const duration = Math.random() * 2 + 3;
+                const size = Math.random() * 2 + 1;
+                
+                // Apply styles
+                emoji.style.left = `${left}%`;
+                emoji.style.bottom = '0';
+                emoji.style.fontSize = `${size}rem`;
+                emoji.style.animationDuration = `${duration}s`;
+                emoji.style.animationDelay = `${delay}s`;
+                
+                celebrationContainer.appendChild(emoji);
+            }
+            
+            // Create fireworks
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.classList.add('firework');
+                    
+                    // Random properties
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const left = Math.random() * 100;
+                    const top = Math.random() * 100;
+                    const delay = Math.random() * 3;
+                    
+                    // Apply styles
+                    firework.style.left = `${left}%`;
+                    firework.style.top = `${top}%`;
+                    firework.style.backgroundColor = color;
+                    firework.style.boxShadow = `0 0 10px 5px ${color}`;
+                    firework.style.animationDelay = `${delay}s`;
+                    
+                    celebrationContainer.appendChild(firework);
+                    
+                    // Remove after animation
+                    setTimeout(() => {
+                        firework.remove();
+                    }, 1000);
+                }, i * 150);
+            }
+            
+            // Hide celebration after some time
+            setTimeout(() => {
+                celebrationContainer.style.display = 'none';
+            }, 5000);
+        }
+
+        // Event Listeners
+        startBtn.addEventListener('click', initQuiz);
+        
+        resourcesBtn.addEventListener('click', showResources);
+        
+        backBtn.addEventListener('click', () => {
+            resourcesContainer.style.display = 'none';
+            quizIntro.style.display = 'block';
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < selectedQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        });
+        
+        restartBtn.addEventListener('click', () => {
+            // Clear any remaining celebration elements
+            celebrationContainer.style.display = 'none';
+            celebrationContainer.innerHTML = '';
+            
+            // Show intro screen
+            resultsContainer.style.display = 'none';
+            quizIntro.style.display = 'block';
+        });
+
+        // PDF Viewer Events
+        pdfViewerClose.addEventListener('click', closePdfViewer);
+        
+        pdfViewerContainer.addEventListener('click', (e) => {
+            if (e.target === pdfViewerContainer) {
+                closePdfViewer();
+            }
+        });
+
+        // Resource button events
+        resourceButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const pdfUrl = button.dataset.pdfUrl;
+                const pdfTitle = button.dataset.pdfTitle;
+                showPdf(pdfUrl, pdfTitle);
+            });
+        });
+
+        // Initialize perfect score counter on page load
+        perfectScoreCounter.textContent = `Perfect Scores: ${perfectScores}`;
+    </script>
+</body>
+</html>
